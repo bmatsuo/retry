@@ -62,12 +62,13 @@ func ExampleRetry_simple() {
 	fmt.Println(<-ready)
 }
 
+type Response struct {
+	data string
+	err  error
+}
+
 // making requests to an unreliable service
 func ExampleRetry() {
-	type Response struct {
-		data string
-		err  error
-	}
 	errServiceUnavailable := fmt.Errorf("kaboom")
 	count := 0
 	unreliableService := func() Response {
