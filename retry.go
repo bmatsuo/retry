@@ -6,7 +6,6 @@ import (
 )
 
 // chain fns together to construct a new DelayFunc. Delay(f, g, h)(d) is equivalent to h(g(f(d))).
-//	Delay(Exponential(2), BoundedMax(125*time.Millisecond, time.Minute))
 func Delay(fns ...DelayFunc) DelayFunc {
 	return func(d time.Duration) time.Duration {
 		for i := range fns {
@@ -50,6 +49,11 @@ func Bounded(min, max time.Duration) DelayFunc {
 	return Delay(BoundedMin(min), BoundedMax(max))
 }
 
+// an iterative function for computing retry delays. delays are computed as
+//	d1 = f(d0)
+//	d2 = f(d1)
+//	d3 = f(d2)
+//	...
 type DelayFunc func(time.Duration) time.Duration
 
 func checkRollover(d time.Duration) {
@@ -138,7 +142,6 @@ type Interface interface {
 
 // The Retry() on the returned interface receives a value after the initial duration.
 // The initial duration seeds iterative calles to delay on successive calls to Retry()
-//	Retry(0, Exponential(2), Bounded(100*time.Millisecond, 5*time.Second))
 func Retry(initial time.Duration, delay ...DelayFunc) Interface {
 	checkRollover(initial)
 	if len(delay) == 0 {
