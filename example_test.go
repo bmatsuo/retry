@@ -47,7 +47,7 @@ func ExampleDelay_reversed() {
 
 // this simple example demonstrates the use of an exponential backoff and calls
 // to Retry().
-func ExampleRetry() {
+func ExampleRetry_simple() {
 	retry := Retry(0,
 		Exponential(2),
 		Bounded(100*time.Millisecond, 5*time.Second))
@@ -60,6 +60,65 @@ func ExampleRetry() {
 
 	ready = retry.Retry() // approx. time.Now() + 200*time.Millisecond
 	fmt.Println(<-ready)
+}
+
+// making requests to an unreliable service
+func ExampleRetry() {
+	type Response struct {
+		data string
+		err  error
+	}
+	errServiceUnavailable := fmt.Errorf("kaboom")
+	count := 0
+	unreliableService := func() Response {
+		count++
+		if count > 3 {
+			return Response{"ok", nil}
+		}
+		return Response{"", errServiceUnavailable}
+	}
+	retryService := func(kill <-chan struct{}) Response {
+		// automatically retry if the service is temporarily unavailable
+		done := make(chan Response)
+		retry := Retry(0, Constant(time.Millisecond))
+		ready := retry.Retry()
+		for {
+			select {
+			case <-kill:
+				return Response{"", fmt.Errorf("killed")}
+			case resp := <-done:
+				if resp.err == errServiceUnavailable {
+					ready = retry.Retry()
+					fmt.Println(resp.err)
+					continue
+				}
+				return resp
+			case <-ready:
+				go func() {
+					select {
+					case done <- unreliableService():
+					case <-kill:
+					}
+				}()
+			}
+		}
+	}
+
+	// attempt to contact the unreliableService for at most 5 ms
+	stop := make(chan struct{})
+	go func() {
+		<-time.After(5 * time.Millisecond)
+		close(stop)
+	}()
+	resp := retryService(stop)
+
+	fmt.Println("got:", resp)
+
+	// Output:
+	// kaboom
+	// kaboom
+	// kaboom
+	// got: {ok <nil>}
 }
 
 // this example retries a concurrently executing function until it succeeds,
@@ -94,12 +153,12 @@ func ExampleMaxTries() {
 		}
 	}
 
-	fmt.Println(withretry(4, time.Millisecond, 5*time.Millisecond, 4*time.Millisecond, func(errch chan<- error, killed <-chan struct{}) {
+	fmt.Println(withretry(4, time.Millisecond, 5*time.Millisecond, 9*time.Millisecond, func(errch chan<- error, killed <-chan struct{}) {
 		errch <- fmt.Errorf("dead")
 		close(errch)
 	}))
 
-	fmt.Println(withretry(4, time.Millisecond, 5*time.Millisecond, 4*time.Millisecond, func(errch chan<- error, killed <-chan struct{}) {
+	fmt.Println(withretry(4, time.Millisecond, 5*time.Millisecond, 9*time.Millisecond, func(errch chan<- error, killed <-chan struct{}) {
 		defer close(errch)
 		select {
 		case <-killed:

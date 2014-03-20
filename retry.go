@@ -24,12 +24,12 @@ type Interface interface {
 func Retry(initial time.Duration, delay ...DelayFunc) Interface {
 	checkRollover(initial)
 	if len(delay) == 0 {
-		return retry{initial, nil}
+		return &retry{initial, nil}
 	}
 	if len(delay) == 1 {
-		return retry{initial, delay[0]}
+		return &retry{initial, delay[0]}
 	}
-	return retry{initial, Delay(delay...)}
+	return &retry{initial, Delay(delay...)}
 }
 
 // if n is less than 1 c is closed immediately.
@@ -169,7 +169,7 @@ func (r *maxretries) Retry() <-chan time.Time {
 	}
 	r.i++
 	if r.r == nil {
-		return retry{}.Retry()
+		return (&retry{}).Retry()
 	}
 	return r.r.Retry()
 }
@@ -179,7 +179,7 @@ type retry struct {
 	delay DelayFunc
 }
 
-func (r retry) Retry() <-chan time.Time {
+func (r *retry) Retry() <-chan time.Time {
 	c := time.After(r.d)
 	if r.delay != nil {
 		r.d = r.delay(r.d)
