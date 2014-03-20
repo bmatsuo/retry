@@ -64,16 +64,17 @@ func Delay(fns ...DelayFunc) DelayFunc {
 	}
 }
 
-// the returned function f(d) returns random durations, uniformly distributed
-// in the range
-//	[d - plusminus, d + plusminus]
-func Randomize(plusminus time.Duration) DelayFunc {
-	checkRollover(plusminus)
-	size := int64(2*plusminus + 1)
-	sub := plusminus
+// a DelayFunc that returns the product of its input and a random value in
+// the range
+//	[1-fuzzfactor, 1+fuzzfactor)
+func Randomize(fuzzfactor float64) DelayFunc {
+	if fuzzfactor < 0 {
+		panic("negative fuzz factor")
+	}
+	size := 2 * fuzzfactor
 	return func(d time.Duration) time.Duration {
-		offset := time.Duration(rand.Int63n(size)) - sub
-		return d + offset
+		scale := 1 + rand.Float64()*size - fuzzfactor
+		return time.Duration(scale * float64(d))
 	}
 }
 

@@ -18,16 +18,17 @@ func callAndRecover(fn func()) (v interface{}) {
 func TestRandomize(t *testing.T) {
 	yt.NotNil(t, callAndRecover(func() { Randomize(-1) }))
 	yt.Nil(t, callAndRecover(func() { Randomize(0) }))
+	yt.Nil(t, callAndRecover(func() { Randomize(0) }))
 	yt.Equal(t, time.Duration(1), Randomize(0)(1))
 	seen := make(map[time.Duration]bool)
 	nrand := 20
 	delay := Randomize(1)
 	for i := 0; i < nrand; i++ {
-		y.Assert(t, time.Duration(0) <= delay(1))
-		y.Assert(t, time.Duration(2) >= delay(1))
-		seen[delay(1)] = true
+		y.Assert(t, time.Duration(0) <= delay(2))
+		y.Assert(t, time.Duration(3) >= delay(2))
+		seen[delay(2)] = true
 	}
-	yt.Equal(t, 3, len(seen), "tried ", nrand, " iterations and have seen ", seen)
+	yt.Equal(t, 4, len(seen), "tried ", nrand, " iterations and have seen ", seen)
 }
 
 func TestExponential(t *testing.T) {
