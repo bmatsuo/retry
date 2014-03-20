@@ -1,7 +1,9 @@
 language: go
 install:
 - go get github.com/bmatsuo/yup
-script: go test -race -v ./...
+script:
+- go test -v ./...
+- bash -c 'export `go env | egrep ^GOROOT`; export `go env | egrep ^GOPATH`; go test -race ./...'
 go:
 - 1.1
 - 1.2
