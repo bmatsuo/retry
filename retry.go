@@ -6,6 +6,7 @@ this package is experimental and the api is subject to change.
 package retry
 
 import (
+	"math/rand"
 	"time"
 )
 
@@ -16,6 +17,19 @@ func Delay(fns ...DelayFunc) DelayFunc {
 			d = fns[i](d)
 		}
 		return d
+	}
+}
+
+// the returned function f(d) returns random durations, uniformly distributed
+// in the range
+//	[d - plusminus, d + plusminus]
+func Randomize(plusminus time.Duration) DelayFunc {
+	checkRollover(plusminus)
+	size := int64(2 * plusminus + 1)
+	sub := plusminus
+	return func(d time.Duration) time.Duration {
+		offset := time.Duration(rand.Int63n(size)) - sub
+		return d + offset
 	}
 }
 
