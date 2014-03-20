@@ -1,5 +1,5 @@
 /*
-retries with expenential backoff.
+retries with expenential backoff capabilities.
 
 this package is experimental and the api is subject to change.
 */
