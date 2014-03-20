@@ -94,23 +94,23 @@ func ExampleMaxTries() {
 		}
 	}
 
-	fmt.Println(withretry(4, time.Second, 5*time.Second, 4*time.Second, func(errch chan<- error, killed <-chan struct{}) {
+	fmt.Println(withretry(4, time.Millisecond, 5*time.Millisecond, 4*time.Millisecond, func(errch chan<- error, killed <-chan struct{}) {
 		errch <- fmt.Errorf("dead")
 		close(errch)
 	}))
 
-	fmt.Println(withretry(4, time.Second, 5*time.Second, 4*time.Second, func(errch chan<- error, killed <-chan struct{}) {
+	fmt.Println(withretry(4, time.Millisecond, 5*time.Millisecond, 4*time.Millisecond, func(errch chan<- error, killed <-chan struct{}) {
 		defer close(errch)
 		select {
 		case <-killed:
 			errch <- fmt.Errorf("killed")
-		case <-time.After(time.Second):
+		case <-time.After(time.Millisecond):
 			errch <- fmt.Errorf("dead")
 		}
 	}))
 
 	flag := make(chan struct{}, 1)
-	fmt.Println(withretry(4, time.Second, 5*time.Second, 4*time.Second, func(errch chan<- error, killed <-chan struct{}) {
+	fmt.Println(withretry(4, time.Millisecond, 5*time.Millisecond, 4*time.Millisecond, func(errch chan<- error, killed <-chan struct{}) {
 		defer close(errch)
 		select {
 		case flag <- struct{}{}:
