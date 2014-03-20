@@ -1,4 +1,8 @@
-// retries with expenential backoff.
+/*
+retries with expenential backoff.
+
+this package is experimental and the api is subject to change.
+*/
 package retry
 
 import (
