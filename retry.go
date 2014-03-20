@@ -19,7 +19,7 @@ type Interface interface {
 }
 
 // the returned interface sends after initial nanos on the first call to Retry().
-// successed calls to the interface's Retry() method signal in delay(initial)
+// successive calls to the interface's Retry() method signal in delay(initial)
 // nanos, delay(delay(initial)) nanos, ...
 func Retry(initial time.Duration, delay ...DelayFunc) Interface {
 	checkRollover(initial)
