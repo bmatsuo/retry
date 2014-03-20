@@ -112,13 +112,13 @@ func ExampleRetry() {
 	}()
 	resp := retryService(stop)
 
-	fmt.Println("got:", resp)
+	fmt.Println("got:", resp.data, resp.err)
 
 	// Output:
 	// kaboom
 	// kaboom
 	// kaboom
-	// got: {ok <nil>}
+	// got: ok <nil>
 }
 
 // this example retries a concurrently executing function until it succeeds,
